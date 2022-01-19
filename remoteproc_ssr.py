@@ -319,7 +319,7 @@ def main1():
           
 if __name__ == "__main__":
     
-    flag=0
+    
     parser = argparse.ArgumentParser(description='remoteproc')
     parser.add_argument('--test_type', dest='test_type', type=str, help='type_of_test',default='functional')
     parser.add_argument('--subsystems', dest='subsystems', type=str, help='list_of_subsystems',default='adsp')
@@ -332,9 +332,9 @@ if __name__ == "__main__":
     setprop=args.setprop
     mode=args.mode
     iters=args.iterations
-    print(setprop)
+    
     subsystems=subsystems.split(',')    
-    print(iters)
+    
     print(test_type)
     print(subsystems)
     print(mode)   
