@@ -68,7 +68,8 @@ def check_subsys_state():
                 else:
                     print("TEST PASS") 
                    
-    if mode=="enabled" or mode=="inline":
+    if mode=="enabled" or mode=="inline" or setprop==True:
+        print("Hello")
           
         output=subprocess.check_output("adb shell ls /data/vendor/ramdump/")
         out=''.join(map(chr, output))
@@ -91,59 +92,81 @@ def enable_coredump(mode):
     rp_subsys_names = list(rp_subsys_names.decode("utf-8").split('\r\n'))
     if setprop == True:
         cmd = "adb shell setprop persist.vendor.ssr.enable_ramdumps 1"
+        os.system(cmd)
+        print(cmd)
+        
+        
+        for rproc_name in rp_subsys_names:
+            for ss in subsystems:
+               
+                    
+                if rproc_name.find(ss) != -1:
+                    
+                    X = rp_subsys_names.index(rproc_name)
+                    
+                   
+                    cmd = "adb shell \"echo enabled  > /sys/class/remoteproc/remoteproc" + str(X) + "/coredump\""
+                    os.system(cmd)
+                        
+                    cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/coredump"
+                        
+                    os.system(cmd)
+                    coredump = subprocess.check_output(cmd)
+                    print("coredump = ",coredump)
+       
     else:
         cmd='adb shell "echo 1 > /sys/module/qcom_ramdump/parameters/enable_dump_collection"'
         os.system(cmd)
         print(cmd)
-    cmd="adb shell /vendor/bin/subsystem_ramdump &"
-    output = subprocess.Popen(cmd, shell=False)
-    
+        cmd="adb shell /vendor/bin/subsystem_ramdump &"
+        output = subprocess.Popen(cmd, shell=False)
+        
         
 
 
-    for rproc_name in rp_subsys_names:
-        for ss in subsystems:
-     
-                
-            if rproc_name.find(ss) != -1:
-                
-                X = rp_subsys_names.index(rproc_name)
-                
-                if mode=='enabled':
-                    cmd = "adb shell \"echo enabled  > /sys/class/remoteproc/remoteproc" + str(X) + "/coredump\""
-                    os.system(cmd)
-                    print(cmd)
-                    cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/coredump"
+        for rproc_name in rp_subsys_names:
+            for ss in subsystems:
+         
                     
-                    os.system(cmd)
-                    coredump = subprocess.check_output(cmd)
-                    print("coredump = ",coredump)
-                    if coredump.find(b"enabled") == -1:
-                        print("coredump is not set to enabled, error in setting enabled")   
+                if rproc_name.find(ss) != -1:
+                    
+                    X = rp_subsys_names.index(rproc_name)
+                    
+                    if mode=='enabled':
+                        cmd = "adb shell \"echo enabled  > /sys/class/remoteproc/remoteproc" + str(X) + "/coredump\""
+                        os.system(cmd)
+                        print(cmd)
+                        cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/coredump"
                         
-                if mode=='inline':
-                    cmd = "adb shell \"echo inline  > /sys/class/remoteproc/remoteproc" + str(X) + "/coredump\""
-                    os.system(cmd)
-                    print(cmd)
-                    cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/coredump"
+                        os.system(cmd)
+                        coredump = subprocess.check_output(cmd)
+                        print("coredump = ",coredump)
+                        if coredump.find(b"enabled") == -1:
+                            print("coredump is not set to enabled, error in setting enabled")   
+                            
+                    if mode=='inline':
+                        cmd = "adb shell \"echo inline  > /sys/class/remoteproc/remoteproc" + str(X) + "/coredump\""
+                        os.system(cmd)
+                        print(cmd)
+                        cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/coredump"
+                        
+                        os.system(cmd)
+                        coredump = subprocess.check_output(cmd)
+                        print("coredump = ",coredump)
+                        if coredump.find(b"inline") == -1:
+                            print("coredump is not set to inline, error in setting inline")
                     
-                    os.system(cmd)
-                    coredump = subprocess.check_output(cmd)
-                    print("coredump = ",coredump)
-                    if coredump.find(b"inline") == -1:
-                        print("coredump is not set to inline, error in setting inline")
-                
-                if mode=='disabled':
-                    cmd = "adb shell \"echo disabled  > /sys/class/remoteproc/remoteproc" + str(X) + "/coredump\""
-                    os.system(cmd)
-                    print(cmd)
-                    cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/coredump"
-                    
-                    os.system(cmd)
-                    coredump = subprocess.check_output(cmd)
-                    print("coredump = ",coredump)
-                    if coredump.find(b"disabled") == -1:
-                        print("coredump is not set to disabled, error in setting disabled")
+                    if mode=='disabled':
+                        cmd = "adb shell \"echo disabled  > /sys/class/remoteproc/remoteproc" + str(X) + "/coredump\""
+                        os.system(cmd)
+                        print(cmd)
+                        cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/coredump"
+                        
+                        os.system(cmd)
+                        coredump = subprocess.check_output(cmd)
+                        print("coredump = ",coredump)
+                        if coredump.find(b"disabled") == -1:
+                            print("coredump is not set to disabled, error in setting disabled")
 
 
 def enable_recovery():
@@ -151,8 +174,27 @@ def enable_recovery():
     if setprop == True:
         cmd = "adb shell setprop persist.vendor.ssr.restart_level ALL_ENABLE";
         output = subprocess.check_output(cmd)
+        rp_subsys_names = subprocess.check_output('adb shell cat /sys/class/remoteproc/remoteproc*/name')
+        rp_subsys_names = list(rp_subsys_names.decode("utf-8").split('\r\n'))
+        
+        
+        for rproc_name in rp_subsys_names:
+            for ss in subsystems:
+         
+                    
+                if rproc_name.find(ss) != -1:
+                    
+                    X = rp_subsys_names.index(rproc_name)
+                    
+                    cmd = "adb shell cat /sys/class/remoteproc/remoteproc" + str(X) + "/recovery"
+                   
+                    os.system(cmd)
+                    recovery = subprocess.check_output(cmd)
+                    print("recovery = ",recovery)
+                    
         
     else:
+        
         
         rp_subsys_names = subprocess.check_output('adb shell cat /sys/class/remoteproc/remoteproc*/name')
         rp_subsys_names = list(rp_subsys_names.decode("utf-8").split('\r\n'))
@@ -207,7 +249,7 @@ def execute_pairwise_ssrs():
     for i in range(1,len(sscommands_applicable)+1):
         combinations=itertools.combinations(sscommands_applicable,i)
         commands_list+=combinations
-           
+        print(commands_list)   
         
     for i in commands_list:
         
